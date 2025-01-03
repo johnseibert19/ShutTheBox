@@ -116,7 +116,24 @@ public class TwelveHatchOptimal {
             }
         }
 
-        // Print the results
+        try {
+            FileWriter writer = new FileWriter("12HatchOptimal.txt");
+            writer.write(String.format("%-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s\n",
+                    "State", "Win Chance", "Roll 2", "Roll 3", "Roll 4", "Roll 5", "Roll 6", "Roll 7", "Roll 8", "Roll 9", "Roll 10", "Roll 11", "Roll 12"));
+            for (int state = 0; state < (1 << 12); state++) {
+                // System.out.println(stateConversion(state));
+                if (cache[state] != null) {
+                    writer.write(String.format("%-15s %-15.5f", stateToString(state), cache[state]));
+                    for (int roll = 2; roll <= 12; roll++) {
+                        writer.write(String.format(" %-15s", getOptimalMove(state, roll)));
+                    }
+                    writer.write("\n");
+                }
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         try {
             FileWriter writer = new FileWriter("WinChance.txt");
             for (int score = 0; score <= 78; score++) {
@@ -129,7 +146,8 @@ public class TwelveHatchOptimal {
             e.printStackTrace();
         }
 
-        System.out.println("Win chance for the starting state: " + winChance + "%");
+
+        System.out.println("Win chance for the starting state: " + winChance);
     }
 
     public static String getOptimalMove(int state, int roll) {
