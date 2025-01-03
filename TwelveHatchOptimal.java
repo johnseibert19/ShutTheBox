@@ -1,8 +1,6 @@
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class TwelveHatchOptimal {
     private static final double[] dieRollChances = {0, 0, 1.0/36, 1.0/18, 1.0/12, 1.0/9, 5.0/36, 1.0/6, 5.0/36, 1.0/9, 1.0/12, 1.0/18, 1.0/36};
@@ -107,25 +105,31 @@ public class TwelveHatchOptimal {
         int startValue = 0b111111111111; // 12 True False values represented as number (4095)
         double winChance = throwNewDie(startValue);
 
+        // Create a HashMap to store the sum of cache[state] for each score
+        Map<Integer, Double> scoreSums = new HashMap<>();
+
+        // Iterate through all possible states
+        for (int state = 0; state < (1 << 12); state++) {
+            if (cache[state] != null) {
+                int score = stateConversion(state);
+                scoreSums.put(score, scoreSums.getOrDefault(score, 0.0) + cache[state]);
+            }
+        }
+
+        // Print the results
         try {
-            FileWriter writer = new FileWriter("12HatchOptimal.txt");
-            writer.write(String.format("%-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s %-15s\n",
-                    "State", "Win Chance", "Roll 2", "Roll 3", "Roll 4", "Roll 5", "Roll 6", "Roll 7", "Roll 8", "Roll 9", "Roll 10", "Roll 11", "Roll 12"));
-            for (int state = 0; state < (1 << 12); state++) {
-                if (cache[state] != null) {
-                    writer.write(String.format("%-15s %-15.5f", stateToString(state), cache[state]));
-                    for (int roll = 2; roll <= 12; roll++) {
-                        writer.write(String.format(" %-15s", getOptimalMove(state, roll)));
-                    }
-                    writer.write("\n");
-                }
+            FileWriter writer = new FileWriter("WinChance.txt");
+            for (int score = 0; score <= 78; score++) {
+                double sum = scoreSums.getOrDefault(score, 0.0);
+                writer.write(String.format("Score: %d, Percent chance of winning: %.5f%%%n", score, sum));
+                System.out.printf("Score: %d, Percent chance of winning: %.5f%%%n", score, sum);
             }
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        System.out.println("Win chance for the starting state: " + winChance);
+        System.out.println("Win chance for the starting state: " + winChance + "%");
     }
 
     public static String getOptimalMove(int state, int roll) {
@@ -159,5 +163,19 @@ public class TwelveHatchOptimal {
             sb.append((state & (1 << i)) != 0 ? "1" : "0");
         }
         return sb.reverse().toString();
+    }
+
+    public static int stateConversion(int state)
+    {
+        String binary = stateToString(state);
+        int sum = 0;
+        for (int i = 0; i < 12; i++)
+        {
+            if (binary.charAt(i) == '1')
+            {
+                sum += 12 - i;
+            }
+        }
+        return sum;
     }
 }
